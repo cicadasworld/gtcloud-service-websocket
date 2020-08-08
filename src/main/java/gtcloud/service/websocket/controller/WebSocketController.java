@@ -1,0 +1,137 @@
+package gtcloud.service.websocket.controller;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import gtcloud.service.websocket.domain.GetCurrentFormationRequest;
+import gtcloud.service.websocket.service.JsonParserService;
+import gtcloud.service.websocket.service.PermissionInfoService;
+import gtcloud.service.websocket.service.ResponseFilterService;
+import okhttp3.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+import javax.websocket.*;
+import javax.websocket.server.PathParam;
+import javax.websocket.server.ServerEndpoint;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+@ServerEndpoint("/mobile/{userId}/{token}")
+@Component
+public class WebSocketController extends WebSocketListener {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(WebSocketController.class);
+
+    private Session session;
+    private String userId;
+    private WebSocket webSocket;
+
+    // userId -> (category -> targetId)
+    private final Map<String, Map<String, List<String>>> userIdToCategoryTargetIds = new HashMap<>();
+    private boolean pass; // true for all pass
+
+    @Override
+    public void onOpen(WebSocket webSocket, Response response) {
+        LOGGER.info("===httpclient onOpen===");
+        this.webSocket = webSocket;
+    }
+
+    @Override
+    public void onMessage(WebSocket webSocket, String text) {
+        String filteredText;
+        ResponseFilterService responseFilterService = ResponseFilterService.getInstance();
+        try {
+            if (pass) {
+                sendMessage(text); // send original TS server message
+            } else {
+                filteredText = responseFilterService.filter(text, userId, userIdToCategoryTargetIds);
+                sendMessage(filteredText != null ? filteredText : ""); // send filtered TS server message
+            }
+        } catch (IOException e) {
+            LOGGER.error(e.getMessage());
+        }
+    }
+
+    private void sendMessage(String text) throws IOException {
+        session.getBasicRemote().sendText(text); // send TS server message to GT client
+    }
+
+    @OnOpen
+    public void onOpen(Session session, @PathParam("userId") String userId, @PathParam("token") String token) {
+        LOGGER.info("===GTClient onOpen===");
+        LOGGER.info("userId={}, token={}", userId, token);
+        this.session = session;
+        this.userId = userId;
+        OkHttpClient client = new OkHttpClient.Builder().build();
+        String situationServerAddress = System.getProperty("situation.server.address", "ws://10.16.50.110:6010");
+        LOGGER.info("situation server address: {}", situationServerAddress);
+        Request request = new Request.Builder().url(situationServerAddress).build();
+        client.newWebSocket(request, this);
+
+        try {  // get and save permission
+            savePermission(userId, token);
+        } catch (Exception e) {
+            LOGGER.info(e.getMessage());
+        }
+    }
+
+    private void savePermission(String userId, String token) throws Exception {
+        PermissionInfoService permissionInfoService = PermissionInfoService.getInstance();
+        Map<String, List<String>> categoryToTargetIds = new HashMap<>();
+        {
+            List<String> targets = permissionInfoService.getTargets(userId, token, "BDTS-1"); // userId can replace with hacking userId
+            categoryToTargetIds.putIfAbsent("BDTS-1", targets);
+        }
+        {
+            List<String> targets = permissionInfoService.getTargets(userId, token, "BDTS-2");
+            categoryToTargetIds.putIfAbsent("BDTS-2", targets);
+        }
+        userIdToCategoryTargetIds.putIfAbsent(userId, categoryToTargetIds);
+    }
+
+    @OnClose
+    public void onClose(Session session) {
+        LOGGER.info("===GTClient onClose===");
+    }
+
+    @OnError
+    public void onError(Throwable t) {
+        LOGGER.error(t.getMessage(), t);
+    }
+
+    @OnMessage
+    @SuppressWarnings("unchecked")
+    public void onMessage(String message, Session session) {
+        LOGGER.info("client message: {}", message);
+        String clientMessage = message;
+        ObjectMapper mapper = JsonParserService.getInstance();
+        try {
+            Map<String, Object> map = mapper.readValue(message, Map.class);
+            String request = (String) map.get("request");
+            String originId = (String) map.get("origin_id");
+            if ("formation_all".equals(request) && "1".equals(originId)) {
+                pass = true;
+                GetCurrentFormationRequest getCurrentFormationRequest = new GetCurrentFormationRequest();
+                getCurrentFormationRequest.setRequest("get_current_formation");
+                getCurrentFormationRequest.setIdentifier(UUID.randomUUID().toString());
+                getCurrentFormationRequest.setOriginId("1");
+
+                clientMessage = mapper.writeValueAsString(getCurrentFormationRequest);
+            } else if ("formation_all".equals(request) && "2".equals(originId)) {
+                pass = true;
+                GetCurrentFormationRequest getCurrentFormationRequest = new GetCurrentFormationRequest();
+                getCurrentFormationRequest.setRequest("get_current_formation");
+                getCurrentFormationRequest.setIdentifier(UUID.randomUUID().toString());
+                getCurrentFormationRequest.setOriginId("2");
+
+                clientMessage = mapper.writeValueAsString(getCurrentFormationRequest);
+            }
+            webSocket.send(clientMessage);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}

@@ -1,0 +1,68 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>websocket_TEST</title>
+</head>
+<body>
+<textarea class="log" style="width: 100%; height: 500px;">
+=======websocket======
+</textarea>
+<input type="button" value="连接" onClick="link()">
+<input type="button" value="断开" onClick="dis()">
+to:
+<input type="text" id="to" value="" style="width:60px">
+<br/>
+消息：
+<input type="text" id="text">
+<input type="button" value="发送" onClick="send1()">
+<input type="button" value="暂停" onClick="send2()">
+<!-- <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script> -->
+<script src="http://10.16.50.124/LHZZDLQP/servWebsite/interface/__assets/jquery/jquery-1.12.4.min.js"></script>
+<script>
+var socket = null;
+var messageId =((new Date() + Math.random()*99999).slice(-16))
+var currentUserId = window.location.search.replace('?','');
+// 连接
+function link(){
+ socket=new WebSocket('ws://10.16.50.229:9090/mobile/1/jxbUAgQAmV1OunMBAAAaAAAAAAAAAAEAAADlMhAK');
+ socket.onopen=function(){log('连接成功')}
+ socket.onmessage=function(msg){log('获得消息:'+msg.data);console.log(msg);}
+ socket.onclose=function(){log('断开连接')}
+ socket.onerror = function(ev){
+  console.log(ev);
+   $('.log').append('服务出现异常，正在重新连接……'+"\r\n");
+  setTimeout(function(){link()},2000);
+ };
+}
+function dis(){
+ socket.close();
+}
+
+function log(var1){
+ $('.log').append(var1+"\r\n");
+}
+function send1(){
+ var json = JSON.stringify(
+	{
+		identifier: 'gtmap_request',
+		request: 'open_receive_realtime_target'
+	}
+ )
+ console.log(json);
+ socket.send(json);
+}
+function send2(){
+ var json = JSON.stringify(
+	{
+		identifier: 'gtmap_request',
+		request: 'close_receive_realtime_target'
+	}
+ )
+ console.log(json);
+ socket.send(json);
+}
+
+</script>
+</body>
+</html>
