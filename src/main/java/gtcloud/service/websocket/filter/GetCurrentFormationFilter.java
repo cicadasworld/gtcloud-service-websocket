@@ -28,7 +28,7 @@ public class GetCurrentFormationFilter implements ResponseFilter {
     }
 
     @Override
-    public String filter(String serverMessage, String userId, Map<String, Map<String, List<String>>> userIdToCategoryTargetIds)
+    public String filter(String serverMessage, String userId, Map<String, Map<String, List<String>>> userIdToCategoryObjectIds)
             throws IOException {
         LOGGER.info("original server message: {}", serverMessage);
         ObjectMapper mapper = JsonParserService.getInstance();
@@ -45,12 +45,12 @@ public class GetCurrentFormationFilter implements ResponseFilter {
         for (FormationInfo originalFormationInfo : originalData) {
             FormationInfo filteredFormationInfo = new FormationInfo();
             List<List<Object>> originalFormationData = originalFormationInfo.getFormationData();
-            for (List<Object> target : originalFormationData) {
-                String targetId = (String) target.get(1); // second element is objectId
+            for (List<Object> targets : originalFormationData) {
+                String objectId = (String) targets.get(1); // second item is objectId
                 ResponseFilterService responseFilterService = ResponseFilterService.getInstance();
-                boolean contains = responseFilterService.contain(targetId, originId, userId, userIdToCategoryTargetIds);
+                boolean contains = responseFilterService.contain(objectId, originId, userId, userIdToCategoryObjectIds);
                 if (contains) {
-                    filteredFormationInfo.getFormationData().add(target);
+                    filteredFormationInfo.getFormationData().add(targets);
                 }
             }
 

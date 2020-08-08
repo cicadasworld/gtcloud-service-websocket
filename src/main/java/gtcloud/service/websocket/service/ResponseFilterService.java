@@ -29,7 +29,7 @@ public class ResponseFilterService {
     }
 
     @SuppressWarnings("unchecked")
-    public String filter(String serverMessage, String userId, Map<String, Map<String, List<String>>> userIdToCategoryTargetIds)
+    public String filter(String serverMessage, String userId, Map<String, Map<String, List<String>>> userIdToCategoryObjectIds)
             throws IOException {
         ObjectMapper mapper = JsonParserService.getInstance();
         Map<String, Object> map = mapper.readValue(serverMessage, Map.class);
@@ -37,28 +37,25 @@ public class ResponseFilterService {
         String response = (String) map.get("response");
         if ("get_current_target".equals(response)) {
             ResponseFilter getCurrentTargetFilter = GetCurrentTargetFilter.getInstance();
-            return getCurrentTargetFilter.filter(serverMessage, userId, userIdToCategoryTargetIds);
+            return getCurrentTargetFilter.filter(serverMessage, userId, userIdToCategoryObjectIds);
         }
         if ("realtime_target".equals(response)) {
             RealTimeTargetFilter realTimeTargetFilter = RealTimeTargetFilter.getInstance();
-            return realTimeTargetFilter.filter(serverMessage, userId, userIdToCategoryTargetIds);
+            return realTimeTargetFilter.filter(serverMessage, userId, userIdToCategoryObjectIds);
         }
         if ("get_current_formation".equals(response)) {
             GetCurrentFormationFilter getCurrentFormationFilter = GetCurrentFormationFilter.getInstance();
-            return getCurrentFormationFilter.filter(serverMessage, userId, userIdToCategoryTargetIds);
+            return getCurrentFormationFilter.filter(serverMessage, userId, userIdToCategoryObjectIds);
         }
         return serverMessage;
     }
 
-    public boolean contain(String targetId, String originId, String userId, Map<String, Map<String, List<String>>> userIdToCategoryTargetIds) {
+    public boolean contain(String objectId, String originId, String userId,
+                           Map<String, Map<String, List<String>>> userIdToCategoryObjectIds) {
         String category = getCategory(originId);
-        Map<String, List<String>> categoryToTargetIds = userIdToCategoryTargetIds.get(userId);
-        List<String> objectIds = new ArrayList<>();
-        List<String> targetIds = categoryToTargetIds.get(category);
-        if (targetIds != null) {
-            objectIds.addAll(targetIds);
-        }
-        return objectIds.contains(targetId);
+        Map<String, List<String>> categoryToObjectIds = userIdToCategoryObjectIds.get(userId);
+        List<String> objectIds = categoryToObjectIds.get(category);
+        return objectIds != null && objectIds.contains(objectId);
     }
 
     private String getCategory(String originId) {

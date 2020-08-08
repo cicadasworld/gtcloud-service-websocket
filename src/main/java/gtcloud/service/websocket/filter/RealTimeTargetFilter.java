@@ -27,7 +27,7 @@ public class RealTimeTargetFilter implements ResponseFilter {
     }
 
     @Override
-    public String filter(String serverMessage, String userId, Map<String, Map<String, List<String>>> userIdToCategoryTargetIds)
+    public String filter(String serverMessage, String userId, Map<String, Map<String, List<String>>> userIdToCategoryObjectIds)
             throws IOException {
         LOGGER.info("original server message: {}", serverMessage);
         ObjectMapper mapper = JsonParserService.getInstance();
@@ -39,12 +39,12 @@ public class RealTimeTargetFilter implements ResponseFilter {
         filteredResponse.setOriginId(originId);
 
         List<List<Object>> originalData = originalResponse.getData();
-        for (List<Object> target : originalData) {
-            String targetId = (String) target.get(0); // first element is objectId
+        for (List<Object> targets : originalData) {
+            String objectId = (String) targets.get(0); // first item is objectId
             ResponseFilterService responseFilterService = ResponseFilterService.getInstance();
-            boolean contains = responseFilterService.contain(targetId, originId, userId, userIdToCategoryTargetIds);
+            boolean contains = responseFilterService.contain(objectId, originId, userId, userIdToCategoryObjectIds);
             if (contains) {
-                filteredResponse.getData().add(target);
+                filteredResponse.getData().add(targets);
             }
         }
 

@@ -29,8 +29,8 @@ public class WebSocketController extends WebSocketListener {
     private String userId;
     private WebSocket webSocket;
 
-    // userId -> (category -> targetId)
-    private final Map<String, Map<String, List<String>>> userIdToCategoryTargetIds = new HashMap<>();
+    // userId -> (category -> objectId)
+    private final Map<String, Map<String, List<String>>> userIdToCategoryObjectIds = new HashMap<>();
     private boolean pass; // true for all pass
 
     @Override
@@ -47,7 +47,7 @@ public class WebSocketController extends WebSocketListener {
             if (pass) {
                 sendMessage(text); // send original TS server message
             } else {
-                filteredText = responseFilterService.filter(text, userId, userIdToCategoryTargetIds);
+                filteredText = responseFilterService.filter(text, userId, userIdToCategoryObjectIds);
                 sendMessage(filteredText != null ? filteredText : ""); // send filtered TS server message
             }
         } catch (IOException e) {
@@ -75,21 +75,25 @@ public class WebSocketController extends WebSocketListener {
             savePermission(userId, token);
         } catch (Exception e) {
             LOGGER.info(e.getMessage());
+            try {
+                if (session != null) {
+                    session.close();
+                }
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
         }
     }
 
     private void savePermission(String userId, String token) throws Exception {
         PermissionInfoService permissionInfoService = PermissionInfoService.getInstance();
         Map<String, List<String>> categoryToTargetIds = new HashMap<>();
-        {
-            List<String> targets = permissionInfoService.getTargets(userId, token, "BDTS-1"); // userId can replace with hacking userId
-            categoryToTargetIds.putIfAbsent("BDTS-1", targets);
+        String[] categories = new String[] {"BDTS-1", "BDTS-2"};
+        for (String category : categories) {
+            List<String> targets = permissionInfoService.getTargets(userId, token, category);
+            categoryToTargetIds.putIfAbsent(category, targets);
         }
-        {
-            List<String> targets = permissionInfoService.getTargets(userId, token, "BDTS-2");
-            categoryToTargetIds.putIfAbsent("BDTS-2", targets);
-        }
-        userIdToCategoryTargetIds.putIfAbsent(userId, categoryToTargetIds);
+        userIdToCategoryObjectIds.putIfAbsent(userId, categoryToTargetIds);
     }
 
     @OnClose

@@ -62,15 +62,11 @@ public class PermissionInfoService {
             String objectIdStr = permissionInfo.getObjProps().get("objectIDs"); // 215515;215514;120487;00742756
             LOGGER.info("opCategory: {}, objectIDs: {}", category, objectIdStr);
             if (objectIdStr != null) {
-                List<String> objectIds = split(objectIdStr);
+                String[] objectIdArray = objectIdStr.split(";");
+                List<String> objectIds = Arrays.asList(objectIdArray);
                 result.addAll(objectIds);
             }
         }
         return result;
-    }
-
-    private List<String> split(String objectIDs) {
-        String[] split = objectIDs.split(";");
-        return Arrays.asList(split);
     }
 }
