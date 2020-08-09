@@ -1,23 +1,34 @@
 package gtcloud.service.websocket.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import gtcloud.service.websocket.domain.GetCurrentFormationRequest;
-import gtcloud.service.websocket.service.JsonParserService;
-import gtcloud.service.websocket.service.PermissionInfoService;
-import gtcloud.service.websocket.service.ResponseFilterService;
-import okhttp3.*;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import javax.websocket.*;
-import javax.websocket.server.PathParam;
-import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+
+import javax.websocket.OnClose;
+import javax.websocket.OnError;
+import javax.websocket.OnMessage;
+import javax.websocket.OnOpen;
+import javax.websocket.Session;
+import javax.websocket.server.PathParam;
+import javax.websocket.server.ServerEndpoint;
+
+import gtcloud.service.websocket.domain.GetCurrentFormationRequest;
+import gtcloud.service.websocket.service.JsonParserService;
+import gtcloud.service.websocket.service.PermissionInfoService;
+import gtcloud.service.websocket.service.ResponseFilterService;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.WebSocket;
+import okhttp3.WebSocketListener;
 
 @ServerEndpoint("/mobile/{userId}/{token}")
 @Component
@@ -30,7 +41,7 @@ public class WebSocketController extends WebSocketListener {
     private WebSocket webSocket;
 
     // userId -> (category -> objectId)
-    private final Map<String, Map<String, List<String>>> userIdToCategoryObjectIds = new HashMap<>();
+    private final Map<String, Map<String, Set<String>>> userIdToCategoryObjectIds = new HashMap<>();
     private boolean pass; // true for all pass
 
     @Override
@@ -87,10 +98,10 @@ public class WebSocketController extends WebSocketListener {
 
     private void savePermission(String userId, String token) throws Exception {
         PermissionInfoService permissionInfoService = PermissionInfoService.getInstance();
-        Map<String, List<String>> categoryToTargetIds = new HashMap<>();
+        Map<String, Set<String>> categoryToTargetIds = new HashMap<>();
         String[] categories = new String[] {"BDTS-1", "BDTS-2"};
         for (String category : categories) {
-            List<String> targets = permissionInfoService.getTargets(userId, token, category);
+            Set<String> targets = permissionInfoService.getTargets(userId, token, category);
             categoryToTargetIds.putIfAbsent(category, targets);
         }
         userIdToCategoryObjectIds.putIfAbsent(userId, categoryToTargetIds);

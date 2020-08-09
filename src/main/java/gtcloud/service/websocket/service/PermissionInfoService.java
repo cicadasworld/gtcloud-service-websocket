@@ -12,7 +12,9 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class PermissionInfoService {
 
@@ -55,8 +57,8 @@ public class PermissionInfoService {
         }
     }
 
-    public List<String> getTargets(String userId, String token, String category) throws Exception {
-        List<String> result = new ArrayList<>();
+    public Set<String> getTargets(String userId, String token, String category) throws Exception {
+        Set<String> result = new HashSet<>();
         List<PermissionInfo> permissionInfoList = getPermissionInfo(userId, token, category);
         for (PermissionInfo permissionInfo : permissionInfoList) {
             String objectIdStr = permissionInfo.getObjProps().get("objectIDs"); // 215515;215514;120487;00742756

@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class GetCurrentTargetFilter implements ResponseFilter {
 
@@ -27,7 +28,7 @@ public class GetCurrentTargetFilter implements ResponseFilter {
     }
 
     @Override
-    public String filter(String serverMessage, String userId, Map<String, Map<String, List<String>>> userIdToCategoryObjectIds)
+    public String filter(String serverMessage, String userId, Map<String, Map<String, Set<String>>> userIdToCategoryObjectIds)
             throws IOException {
         LOGGER.info("original server message: {}", serverMessage);
         ObjectMapper mapper = JsonParserService.getInstance();

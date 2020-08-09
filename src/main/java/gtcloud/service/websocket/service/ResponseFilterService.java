@@ -1,17 +1,19 @@
 package gtcloud.service.websocket.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import gtcloud.service.websocket.filter.GetCurrentFormationFilter;
-import gtcloud.service.websocket.filter.GetCurrentTargetFilter;
-import gtcloud.service.websocket.filter.RealTimeTargetFilter;
-import gtcloud.service.websocket.filter.ResponseFilter;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
+import gtcloud.service.websocket.filter.GetCurrentFormationFilter;
+import gtcloud.service.websocket.filter.GetCurrentTargetFilter;
+import gtcloud.service.websocket.filter.RealTimeTargetFilter;
+import gtcloud.service.websocket.filter.ResponseFilter;
 
 public class ResponseFilterService {
 
@@ -29,7 +31,7 @@ public class ResponseFilterService {
     }
 
     @SuppressWarnings("unchecked")
-    public String filter(String serverMessage, String userId, Map<String, Map<String, List<String>>> userIdToCategoryObjectIds)
+    public String filter(String serverMessage, String userId, Map<String, Map<String, Set<String>>> userIdToCategoryObjectIds)
             throws IOException {
         ObjectMapper mapper = JsonParserService.getInstance();
         Map<String, Object> map = mapper.readValue(serverMessage, Map.class);
@@ -51,11 +53,15 @@ public class ResponseFilterService {
     }
 
     public boolean contain(String objectId, String originId, String userId,
-                           Map<String, Map<String, List<String>>> userIdToCategoryObjectIds) {
+                           Map<String, Map<String, Set<String>>> userIdToCategoryObjectIds) {
         String category = getCategory(originId);
-        Map<String, List<String>> categoryToObjectIds = userIdToCategoryObjectIds.get(userId);
-        List<String> objectIds = categoryToObjectIds.get(category);
-        return objectIds != null && objectIds.contains(objectId);
+        Map<String, Set<String>> categoryToObjectIds = userIdToCategoryObjectIds.get(userId);
+
+        if (categoryToObjectIds.containsKey(category)) {
+            Set<String> objectIds = categoryToObjectIds.get(category);
+            return objectIds.contains(objectId);
+        }
+        return false;
     }
 
     private String getCategory(String originId) {
