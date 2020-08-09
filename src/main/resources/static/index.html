@@ -18,14 +18,14 @@ to:
 <input type="button" value="发送" onClick="send1()">
 <input type="button" value="暂停" onClick="send2()">
 <!-- <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script> -->
-<script src="http://10.16.50.124/LHZZDLQP/servWebsite/interface/__assets/jquery/jquery-1.12.4.min.js"></script>
+<script src="jquery-1.10.2.min.js"></script>
 <script>
 var socket = null;
 var messageId =((new Date() + Math.random()*99999).slice(-16))
 var currentUserId = window.location.search.replace('?','');
 // 连接
 function link(){
- socket=new WebSocket('ws://10.16.50.229:9090/mobile/1/jxbUAgQAmV1OunMBAAAaAAAAAAAAAAEAAADlMhAK');
+ socket=new WebSocket('ws://localhost:9090/mobile/1/jxbUAgQAmV1OunMBAAAaAAAAAAAAAAEAAADlMhAK');
  socket.onopen=function(){log('连接成功')}
  socket.onmessage=function(msg){log('获得消息:'+msg.data);console.log(msg);}
  socket.onclose=function(){log('断开连接')}

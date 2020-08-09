@@ -30,7 +30,7 @@ import okhttp3.Response;
 import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
 
-@ServerEndpoint("/mobile/{userId}/{token}")
+@ServerEndpoint(value = "/mobile/{userId}/{token}")
 @Component
 public class WebSocketController extends WebSocketListener {
 
@@ -77,7 +77,7 @@ public class WebSocketController extends WebSocketListener {
         this.session = session;
         this.userId = userId;
         OkHttpClient client = new OkHttpClient.Builder().build();
-        String situationServerAddress = System.getProperty("situation.server.address", "ws://10.16.50.110:6010");
+        String situationServerAddress = System.getProperty("situation.server.address", "ws://localhost:8090/ws");
         LOGGER.info("situation server address: {}", situationServerAddress);
         Request request = new Request.Builder().url(situationServerAddress).build();
         client.newWebSocket(request, this);
