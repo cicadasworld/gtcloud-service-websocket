@@ -147,6 +147,7 @@ public class WebSocketController extends WebSocketListener {
             webSocket.send(clientMessage);
         } catch (IOException e) {
             e.printStackTrace();
+            LOGGER.error(e.getMessage);
         }
     }
 }
