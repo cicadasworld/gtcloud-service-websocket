@@ -97,10 +97,10 @@ public class WebSocketController extends WebSocketListener {
     }
 
     private void savePermission(String userId, String token) throws Exception {
-        PermissionInfoService permissionInfoService = PermissionInfoService.getInstance();
         Map<String, Set<String>> categoryToTargetIds = new HashMap<>();
         String[] categories = new String[] {"BDTS-1", "BDTS-2"};
         for (String category : categories) {
+            PermissionInfoService permissionInfoService = PermissionInfoService.getInstance();
             Set<String> targets = permissionInfoService.getTargets(userId, token, category);
             categoryToTargetIds.putIfAbsent(category, targets);
         }
