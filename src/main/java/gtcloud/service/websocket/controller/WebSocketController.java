@@ -53,11 +53,11 @@ public class WebSocketController extends WebSocketListener {
     @Override
     public void onMessage(WebSocket webSocket, String text) {
         String filteredText;
-        ResponseFilterService responseFilterService = ResponseFilterService.getInstance();
         try {
             if (pass) {
                 sendMessage(text); // send original TS server message
             } else {
+                ResponseFilterService responseFilterService = ResponseFilterService.getInstance();
                 filteredText = responseFilterService.filter(text, userId, userIdToCategoryObjectIds);
                 sendMessage(filteredText != null ? filteredText : ""); // send filtered TS server message
             }
