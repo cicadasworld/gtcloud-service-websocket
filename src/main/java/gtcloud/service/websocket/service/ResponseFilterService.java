@@ -1,19 +1,15 @@
 package gtcloud.service.websocket.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import gtcloud.service.websocket.filter.GetCurrentFormationFilter;
 import gtcloud.service.websocket.filter.GetCurrentTargetFilter;
 import gtcloud.service.websocket.filter.RealTimeTargetFilter;
 import gtcloud.service.websocket.filter.ResponseFilter;
+import java.io.IOException;
+import java.util.Map;
+import java.util.Set;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ResponseFilterService {
 
@@ -31,21 +27,24 @@ public class ResponseFilterService {
     }
 
     @SuppressWarnings("unchecked")
-    public String filter(String serverMessage, String userId, Map<String, Map<String, Set<String>>> userIdToCategoryObjectIds)
-            throws IOException {
+    public String filter(String serverMessage, String userId,
+        Map<String, Map<String, Set<String>>> userIdToCategoryObjectIds) throws IOException {
+        boolean isResponse = serverMessage.contains("response");
+        if (!isResponse) {
+            return serverMessage;
+        }
         ObjectMapper mapper = JsonParserService.getInstance();
         Map<String, Object> map = mapper.readValue(serverMessage, Map.class);
-
         String response = (String) map.get("response");
         if ("get_current_target".equals(response)) {
             ResponseFilter getCurrentTargetFilter = GetCurrentTargetFilter.getInstance();
             return getCurrentTargetFilter.filter(serverMessage, userId, userIdToCategoryObjectIds);
         }
-        if ("realtime_target".equals(response)) {
+        else if ("realtime_target".equals(response)) {
             RealTimeTargetFilter realTimeTargetFilter = RealTimeTargetFilter.getInstance();
             return realTimeTargetFilter.filter(serverMessage, userId, userIdToCategoryObjectIds);
         }
-        if ("get_current_formation".equals(response)) {
+        else if ("get_current_formation".equals(response)) {
             GetCurrentFormationFilter getCurrentFormationFilter = GetCurrentFormationFilter.getInstance();
             return getCurrentFormationFilter.filter(serverMessage, userId, userIdToCategoryObjectIds);
         }
@@ -53,7 +52,12 @@ public class ResponseFilterService {
     }
 
     public boolean contain(String objectId, String originId, String userId,
-                           Map<String, Map<String, Set<String>>> userIdToCategoryObjectIds) {
+        Map<String, Map<String, Set<String>>> userIdToCategoryObjectIds) {
+
+        if ("2".equals(originId)) { // Let HKQ pass
+            return true;
+        }
+
         String category = getCategory(originId);
         Map<String, Set<String>> categoryToObjectIds = userIdToCategoryObjectIds.get(userId);
 
@@ -74,7 +78,7 @@ public class ResponseFilterService {
                 category = "BDTS-2";
                 break;
             default:
-                category = "unknown";
+                category = "UNKNOWN";
         }
         return category;
     }

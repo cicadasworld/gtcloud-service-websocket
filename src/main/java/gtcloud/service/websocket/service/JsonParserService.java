@@ -1,5 +1,6 @@
 package gtcloud.service.websocket.service;
 
+import com.fasterxml.jackson.core.JsonGenerator.Feature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class JsonParserService {
@@ -12,6 +13,7 @@ public class JsonParserService {
     }
 
     private static class JsonParserServiceHolder {
-        private static final ObjectMapper instance = new ObjectMapper();
+        private static final ObjectMapper instance = new ObjectMapper()
+            .configure(Feature.ESCAPE_NON_ASCII, true);
     }
 }

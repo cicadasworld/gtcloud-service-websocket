@@ -1,0 +1,69 @@
+{
+   "code" : 0,
+   "data" : [
+      {
+         "formation_data" : [
+            [
+               "other",
+               "35042",
+               "未知",
+               null,
+               0,
+               "",
+               "None",
+               "None",
+               "None",
+               "None",
+               "None",
+               "None",
+               null,
+               null,
+               null,
+               null
+            ],
+            [
+               "other",
+               "88734",
+               "未知",
+               null,
+               0,
+               "",
+               "None",
+               "None",
+               "None",
+               "None",
+               "None",
+               "None",
+               null,
+               "None",
+               "None",
+               null
+            ],
+            [
+               "other",
+               "88737",
+               "未知",
+               null,
+               0,
+               "",
+               "None",
+               "None",
+               "None",
+               "None",
+               "None",
+               "None",
+               null,
+               "None",
+               "None",
+               null
+            ]
+         ],
+         "formation_id" : "1",
+         "formation_name" : "北斗系统编成",
+         "origin_id" : "1"
+      }
+   ],
+   "identifier" : "GTMAP_REQUEST_CURRENT_PROJECT_DETAIL_1_1596525582",
+   "origin_id" : "1",
+   "response" : "get_current_formation"
+}

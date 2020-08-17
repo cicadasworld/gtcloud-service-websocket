@@ -5,13 +5,12 @@ import gtcloud.service.websocket.domain.FormationInfo;
 import gtcloud.service.websocket.domain.GetCurrentFormationResponse;
 import gtcloud.service.websocket.service.JsonParserService;
 import gtcloud.service.websocket.service.ResponseFilterService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class GetCurrentFormationFilter implements ResponseFilter {
 
@@ -29,8 +28,8 @@ public class GetCurrentFormationFilter implements ResponseFilter {
     }
 
     @Override
-    public String filter(String serverMessage, String userId, Map<String, Map<String, Set<String>>> userIdToCategoryObjectIds)
-            throws IOException {
+    public String filter(String serverMessage, String userId,
+        Map<String, Map<String, Set<String>>> userIdToCategoryObjectIds) throws IOException {
         LOGGER.info("original server message: {}", serverMessage);
         ObjectMapper mapper = JsonParserService.getInstance();
         GetCurrentFormationResponse originalResponse = mapper.readValue(serverMessage, GetCurrentFormationResponse.class);
@@ -46,12 +45,13 @@ public class GetCurrentFormationFilter implements ResponseFilter {
         for (FormationInfo originalFormationInfo : originalData) {
             FormationInfo filteredFormationInfo = new FormationInfo();
             List<List<Object>> originalFormationData = originalFormationInfo.getFormationData();
-            for (List<Object> targets : originalFormationData) {
-                String objectId = (String) targets.get(1); // second item is objectId
+            for (List<Object> target : originalFormationData) {
+                String objectId = (String) target.get(1); // second item is objectId
                 ResponseFilterService responseFilterService = ResponseFilterService.getInstance();
-                boolean contains = responseFilterService.contain(objectId, originId, userId, userIdToCategoryObjectIds);
+                boolean contains = responseFilterService.contain(objectId, originId, userId,
+                    userIdToCategoryObjectIds);
                 if (contains) {
-                    filteredFormationInfo.getFormationData().add(targets);
+                    filteredFormationInfo.getFormationData().add(target);
                 }
             }
 
