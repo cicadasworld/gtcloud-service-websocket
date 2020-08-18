@@ -79,6 +79,7 @@ public class ResponseFilterService {
                 break;
             default:
                 category = "UNKNOWN";
+                break;
         }
         return category;
     }
