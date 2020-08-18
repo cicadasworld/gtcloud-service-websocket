@@ -18,14 +18,14 @@ public class WsManager implements IWsManager {
     private final static long RECONNECT_MAX_TIME = 120 * 1000;   //最大重连间隔
     private WebSocketController controller;
     private String wsUrl;
-    private WebSocket mWebSocket;
-    private OkHttpClient mOkHttpClient;
-    private Request mRequest;
-    private int mCurrentStatus = WsStatus.DISCONNECTED;     //websocket连接状态
+    private WebSocket webSocket;
+    private OkHttpClient okHttpClient;
+    private Request request;
+    private int currentStatus = WsStatus.DISCONNECTED;     //websocket连接状态
     private boolean isNeedReconnect;          //是否需要断线自动重连
     private boolean isManualClose = false;         //是否为手动关闭websocket连接
     private WsStatusListener wsStatusListener;
-    private Lock mLock;
+    private Lock lock;
     private int reconnectCount = 0;   //重连次数
     private Runnable reconnectRunnable = new Runnable() {
         @Override
@@ -40,7 +40,7 @@ public class WsManager implements IWsManager {
 
         @Override
         public void onOpen(WebSocket webSocket, final Response response) {
-            mWebSocket = webSocket;
+            WsManager.this.webSocket = webSocket;
             setCurrentStatus(WsStatus.CONNECTED);
             connected();
             if (wsStatusListener != null) {
@@ -82,31 +82,31 @@ public class WsManager implements IWsManager {
     };
 
     public WsManager(Builder builder) {
-        controller = builder.controller;
-        wsUrl = builder.wsUrl;
-        isNeedReconnect = builder.needReconnect;
-        mOkHttpClient = builder.mOkHttpClient;
-        this.mLock = new ReentrantLock();
+        this.controller = builder.controller;
+        this.wsUrl = builder.wsUrl;
+        this.isNeedReconnect = builder.needReconnect;
+        this.okHttpClient = builder.okHttpClient;
+        this.lock = new ReentrantLock();
     }
 
     private void initWebSocket() {
-        if (mOkHttpClient == null) {
-            mOkHttpClient = new OkHttpClient.Builder()
+        if (okHttpClient == null) {
+            okHttpClient = new OkHttpClient.Builder()
                     .retryOnConnectionFailure(true)
                     .build();
         }
-        if (mRequest == null) {
-            mRequest = new Request.Builder()
+        if (request == null) {
+            request = new Request.Builder()
                     .url(wsUrl)
                     .build();
         }
-        mOkHttpClient.dispatcher().cancelAll();
+        okHttpClient.dispatcher().cancelAll();
         try {
-            mLock.lockInterruptibly();
+            lock.lockInterruptibly();
             try {
-                mOkHttpClient.newWebSocket(mRequest, mWebSocketListener);
+                okHttpClient.newWebSocket(request, mWebSocketListener);
             } finally {
-                mLock.unlock();
+                lock.unlock();
             }
         } catch (InterruptedException e) {
         }
@@ -114,7 +114,7 @@ public class WsManager implements IWsManager {
 
     @Override
     public WebSocket getWebSocket() {
-        return mWebSocket;
+        return webSocket;
     }
 
 
@@ -124,17 +124,17 @@ public class WsManager implements IWsManager {
 
     @Override
     public synchronized boolean isWsConnected() {
-        return mCurrentStatus == WsStatus.CONNECTED;
+        return currentStatus == WsStatus.CONNECTED;
     }
 
     @Override
     public synchronized int getCurrentStatus() {
-        return mCurrentStatus;
+        return currentStatus;
     }
 
     @Override
     public synchronized void setCurrentStatus(int currentStatus) {
-        this.mCurrentStatus = currentStatus;
+        this.currentStatus = currentStatus;
     }
 
     @Override
@@ -172,15 +172,15 @@ public class WsManager implements IWsManager {
     }
 
     private void disconnect() {
-        if (mCurrentStatus == WsStatus.DISCONNECTED) {
+        if (currentStatus == WsStatus.DISCONNECTED) {
             return;
         }
         cancelReconnect();
-        if (mOkHttpClient != null) {
-            mOkHttpClient.dispatcher().cancelAll();
+        if (okHttpClient != null) {
+            okHttpClient.dispatcher().cancelAll();
         }
-        if (mWebSocket != null) {
-            boolean isClosed = mWebSocket.close(WsStatus.CODE.NORMAL_CLOSE, WsStatus.TIP.NORMAL_CLOSE);
+        if (webSocket != null) {
+            boolean isClosed = webSocket.close(WsStatus.CODE.NORMAL_CLOSE, WsStatus.TIP.NORMAL_CLOSE);
             //非正常关闭连接
             if (!isClosed) {
                 if (wsStatusListener != null) {
@@ -219,11 +219,11 @@ public class WsManager implements IWsManager {
 
     private boolean send(Object msg) {
         boolean isSend = false;
-        if (mWebSocket != null && mCurrentStatus == WsStatus.CONNECTED) {
+        if (webSocket != null && currentStatus == WsStatus.CONNECTED) {
             if (msg instanceof String) {
-                isSend = mWebSocket.send((String) msg);
+                isSend = webSocket.send((String) msg);
             } else if (msg instanceof ByteString) {
-                isSend = mWebSocket.send((ByteString) msg);
+                isSend = webSocket.send((ByteString) msg);
             }
             //发送消息失败，尝试重连
             if (!isSend) {
@@ -243,24 +243,24 @@ public class WsManager implements IWsManager {
         private WebSocketController controller;
         private String wsUrl;
         private boolean needReconnect = true;
-        private OkHttpClient mOkHttpClient;
+        private OkHttpClient okHttpClient;
 
-        public Builder(WebSocketController val) {
-            controller = val;
+        public Builder(WebSocketController controller) {
+            this.controller = controller;
         }
 
-        public Builder wsUrl(String val) {
-            wsUrl = val;
+        public Builder wsUrl(String wsUrl) {
+            this.wsUrl = wsUrl;
             return this;
         }
 
-        public Builder client(OkHttpClient val) {
-            mOkHttpClient = val;
+        public Builder client(OkHttpClient okHttpClient) {
+            this.okHttpClient = okHttpClient;
             return this;
         }
 
-        public Builder needReconnect(boolean val) {
-            needReconnect = val;
+        public Builder needReconnect(boolean needReconnect) {
+            this.needReconnect = needReconnect;
             return this;
         }
 
